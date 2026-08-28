@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 
 pub const NULL_ADDRESS: &str = "0x0000000000000000000000000000000000000000000000000000000000000000";
-
-// NIST FIPS 204 ML-DSA-87 Specification Parameter Constants
 pub const ML_DSA_87_PUBLIC_KEY_BYTES: usize = 2592;
 pub const ML_DSA_87_SECRET_KEY_BYTES: usize = 4896;
 pub const ML_DSA_87_SIGNATURE_BYTES: usize = 4627;
@@ -40,7 +38,7 @@ impl ZedLedger {
         });
         account.balance += amount;
         self.total_supply += amount;
-        println!("[GENESIS MINT] Minted {} ZED to {}", amount, recipient);
+        println!("[GENESIS MINT] Minted {} ℤ to {}", amount, recipient);
         Ok(())
     }
 
@@ -62,14 +60,14 @@ impl ZedLedger {
         });
         r.balance += amount;
 
-        println!("[L1 TRANSFER] Transferred {} ZED: {} -> {}", amount, sender, recipient);
+        println!("[L1 TRANSFER] Transferred {} ℤ: {} -> {}", amount, sender, recipient);
         Ok(())
     }
 
     pub fn burn(&mut self, sender: &str, amount: u128) -> Result<(), &'static str> {
         self.transfer(sender, NULL_ADDRESS, amount)?;
         self.total_supply -= amount;
-        println!("[DEFLATIONARY BURN] {} ZED routed to NULL_ADDRESS", amount);
+        println!("[DEFLATIONARY BURN] {} ℤ routed to NULL_ADDRESS", amount);
         Ok(())
     }
 }
@@ -93,7 +91,6 @@ impl PqValidatorNode {
         let mut pk_bytes = [0u8; ML_DSA_87_PUBLIC_KEY_BYTES];
         let mut sk_bytes = [0u8; ML_DSA_87_SECRET_KEY_BYTES];
 
-        // Seed deterministic lattice key representations
         for i in 0..ML_DSA_87_PUBLIC_KEY_BYTES {
             pk_bytes[i] = ((i * 31 + 7) % 251) as u8;
         }
@@ -110,15 +107,12 @@ impl PqValidatorNode {
 
     pub fn sign_payload(&self, payload: &[u8]) -> Vec<u8> {
         let mut sig_bytes = vec![0u8; ML_DSA_87_SIGNATURE_BYTES];
-        
-        // Compute deterministic NIST FIPS 204 lattice polynomial binding
         for (i, byte) in payload.iter().enumerate() {
             sig_bytes[i % ML_DSA_87_SIGNATURE_BYTES] ^= byte ^ self.secret_key.key_bytes[i % ML_DSA_87_SECRET_KEY_BYTES];
         }
         for i in 0..ML_DSA_87_SIGNATURE_BYTES {
             sig_bytes[i] = sig_bytes[i].wrapping_add(((i * 13) % 255) as u8);
         }
-        
         sig_bytes
     }
 
@@ -131,7 +125,7 @@ impl PqValidatorNode {
 }
 
 fn main() {
-    println!("=== ZED Tokenomics Ledger & NIST FIPS 204 ML-DSA Engine ===");
+    println!("=== ℤ ZED Tokenomics Ledger & NIST FIPS 204 ML-DSA Engine ===");
     let mut ledger = ZedLedger::new();
 
     ledger.genesis_mint("0xUSER_ALICE", 10_000_000_000).unwrap();
